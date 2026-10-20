@@ -176,3 +176,4 @@ To enable live Gemini AI evaluations instead of the mock engine:
    ai.gemini.model=gemini-1.5-flash
    ```
 3. Restart the backend. The platform will automatically route evaluations through Gemini! If the key is omitted or invalid, it gracefully falls back to the smart mock evaluator.
+# Ai-Interview-System
