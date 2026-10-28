@@ -19,7 +19,7 @@ if lsof -i :8080 >/dev/null 2>&1; then
   echo "✔ Backend already running on port 8080"
 else
   echo "[2/3] Starting Backend (Spring Boot) on port 8080..."
-  nohup mvn -f "$PROJECT_DIR/backend/pom.xml" spring-boot:run > "$PROJECT_DIR/backend.log" 2>&1 &
+  nohup env DB_PORT=3307 mvn -f "$PROJECT_DIR/backend/pom.xml" spring-boot:run > "$PROJECT_DIR/backend.log" 2>&1 &
   sleep 4
 fi
 

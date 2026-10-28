@@ -24,7 +24,7 @@ $beRunning = Get-NetTCPConnection -LocalPort 8080 -State Listen -ErrorAction Sil
 if (-not $beRunning) {
     Write-Host "[2/3] Starting Backend (Spring Boot on port 8080)..." -ForegroundColor Yellow
     $mvnCmd = "C:\Program Files\JetBrains\IntelliJ IDEA 2025.2\plugins\maven\lib\maven3\bin\mvn.cmd"
-    $backendCmd = "/k cd /d `"$scriptDir\backend`" && `"$mvnCmd`" spring-boot:run"
+    $backendCmd = "/k cd /d `"$scriptDir\backend`" && set DB_PORT=3307 && `"$mvnCmd`" spring-boot:run"
     Start-Process -FilePath "cmd.exe" -ArgumentList $backendCmd
     Start-Sleep -Seconds 5
 } else {
