@@ -3,8 +3,14 @@
   "version": "1.0.0",
   "description": "AI Interview Prep full-stack platform",
   "scripts": {
-    "start": "powershell -ExecutionPolicy Bypass -File .\\run.ps1",
-    "dev": "powershell -ExecutionPolicy Bypass -File .\\run.ps1",
-    "stop": ".\\stop-all.bat"
+    "build": "npm --prefix frontend run build",
+    "build:frontend": "npm --prefix frontend run build",
+    "build:backend": "mvn -f backend/pom.xml clean package -DskipTests",
+    "start": "node -e \"console.log('Production Notice: Deploy frontend as a Render Static Site (rootDir: frontend) and backend as a Render Web Service (rootDir: backend). Refer to render.yaml and README.md.')\"",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:windows": "powershell -ExecutionPolicy Bypass -File .\\run.ps1",
+    "stop:windows": ".\\stop-all.bat",
+    "dev:unix": "bash ./start.sh",
+    "stop:unix": "bash ./stop.sh"
   }
 }

@@ -176,4 +176,79 @@ To enable live Gemini AI evaluations instead of the mock engine:
    ai.gemini.model=gemini-1.5-flash
    ```
 3. Restart the backend. The platform will automatically route evaluations through Gemini! If the key is omitted or invalid, it gracefully falls back to the smart mock evaluator.
-# Ai-Interview-System
+---
+
+## ☁️ Deploying to Render (Linux Compatible)
+
+The repository is configured for modern, cross-platform cloud deployment on [Render](https://render.com).
+
+Because the project contains a modern React single-page frontend and a robust Spring Boot backend, they should be deployed as two decoupled, high-performance services:
+
+```mermaid
+flowchart LR
+    Browser["User Browser"] --> |"HTTPS (Static Assets & React Router)"| Frontend["Render Static Site (frontend/)"]
+    Browser --> |"REST API Calls (CORS enabled)"| Backend["Render Web Service (backend/ Docker)"]
+    Backend --> |"JDBC Connection"| DB[("MySQL / Cloud Database")]
+```
+
+### Option 1: One-Click Render Blueprint (Recommended)
+1. Push your repository to GitHub.
+2. In the Render Dashboard, click **New +** -> **Blueprint**.
+3. Select this repository. Render will automatically read [`render.yaml`](file:///Users/shaileshkumar/.gemini/antigravity/scratch/ai-interview-system-github/render.yaml) and configure both services with proper build and rewrite settings.
+4. Fill in the database credentials and the frontend's `VITE_API_BASE_URL` with your backend URL.
+
+---
+
+### Option 2: Manual Dashboard Setup
+
+#### 1. Backend Service (Spring Boot REST API)
+1. In Render Dashboard, click **New +** -> **Web Service**.
+2. Connect your GitHub repository: `Ai-Interview-System`.
+3. Configure the service settings:
+   - **Name**: `ai-interview-backend`
+   - **Root Directory**: `backend` (or leave empty if using root Dockerfile)
+   - **Environment / Runtime**: `Docker`
+   - **Dockerfile Path**: `Dockerfile` (or `backend/Dockerfile` if Root Directory is empty)
+   - **Health Check Path**: `/api/health`
+4. Add the required Environment Variables:
+   - `PORT`: `8080` (or leave dynamic; Spring Boot binds automatically to `$PORT`)
+   - `CORS_ORIGINS`: `https://<your-frontend-site>.onrender.com,http://localhost:5173`
+   - `DB_HOST`: Your MySQL host (e.g. Aiven, Railway, AWS RDS, or PlanetScale)
+   - `DB_PORT`: `3306`
+   - `DB_NAME`: `ai_interview_prep`
+   - `DB_USER`: Your MySQL username
+   - `DB_PASSWORD`: Your MySQL password
+   - `JWT_SECRET`: A secure random 256-bit string (e.g. `AIInterviewPrepSecretKeyForJwtTokenGenerationMustBe256BitsOrMoreLong2026`)
+   - `AI_PROVIDER`: `mock` (or `gemini` if you add `GEMINI_API_KEY`)
+   - *(Optional for instant preview without MySQL)*: `SPRING_PROFILES_ACTIVE`: `h2`
+5. Click **Create Web Service**. Note the deployed backend URL (e.g., `https://ai-interview-backend.onrender.com`).
+
+#### 2. Frontend Service (React Single Page App)
+1. In Render Dashboard, click **New +** -> **Static Site**.
+2. Connect your GitHub repository: `Ai-Interview-System`.
+3. Configure the static site settings:
+   - **Name**: `ai-interview-frontend`
+   - **Root Directory**: `frontend`
+   - **Build Command**: `npm install && npm run build`
+   - **Publish Directory**: `dist`
+4. Add the required Environment Variable:
+   - `VITE_API_BASE_URL`: `https://<your-backend-subdomain>.onrender.com`
+5. Configure React Router Rewrites (Crucial for page refreshes & direct links):
+   - Under **Redirects / Rewrites** in the static site settings, click **Add Rule**:
+     - **Type**: `Rewrite`
+     - **Source**: `/*`
+     - **Destination**: `/index.html`
+6. Click **Create Static Site**.
+
+---
+
+## ⚡ Local Development Commands
+
+| Platform | Command | Description |
+|---|---|---|
+| **Windows** | `powershell -ExecutionPolicy Bypass -File .\run.ps1` | Launches local MariaDB, Spring Boot, and Vite |
+| **macOS / Linux** | `./start.sh` or `npm run dev:unix` | Launches local MySQL/MariaDB, Spring Boot, and Vite |
+| **Frontend Only** | `npm run dev:frontend` | Runs Vite dev server on port 5173 with proxy to backend |
+| **Backend Only** | `mvn -f backend/pom.xml spring-boot:run` | Starts Spring Boot on port 8080 |
+| **Frontend Build** | `npm run build:frontend` | TypeScript check & Vite production bundle |
+| **Backend Build** | `npm run build:backend` | Clean package Spring Boot runnable JAR |
