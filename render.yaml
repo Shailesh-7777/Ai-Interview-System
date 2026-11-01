@@ -11,8 +11,6 @@ services:
     region: oregon
     healthCheckPath: /api/health
     envVars:
-      - key: PORT
-        value: 8080
       - key: CORS_ORIGINS
         sync: false
       - key: DATABASE_URL
@@ -45,8 +43,6 @@ services:
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist
-    plan: free
-    region: oregon
     routes:
       - type: rewrite
         source: /*
