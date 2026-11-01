@@ -7,3 +7,4 @@ target/
 .DS_Store
 *.log
 mariadb-data/
+mysql-mac-data/

@@ -119,50 +119,66 @@ public class DataSourceConfig {
                     resolvedJdbcUrl = rawUrl.replaceFirst("^(mysql|mariadb)://", "jdbc:mysql://");
                 }
             } else if (rawUrl.startsWith("jdbc:")) {
-                resolvedJdbcUrl = rawUrl;
+                if (rawUrl.startsWith("jdbc:mysql:") || rawUrl.startsWith("jdbc:mariadb:")) {
+                    char delimiter = rawUrl.contains("?") ? '&' : '?';
+                    StringBuilder enhanced = new StringBuilder(rawUrl);
+                    if (!rawUrl.contains("allowPublicKeyRetrieval")) {
+                        enhanced.append(delimiter).append("allowPublicKeyRetrieval=true");
+                        delimiter = '&';
+                    }
+                    if (!rawUrl.contains("sslMode") && !rawUrl.contains("useSSL")) {
+                        enhanced.append(delimiter).append("sslMode=PREFERRED");
+                        delimiter = '&';
+                    }
+                    if (!rawUrl.contains("serverTimezone")) {
+                        enhanced.append(delimiter).append("serverTimezone=UTC");
+                        delimiter = '&';
+                    }
+                    if (!rawUrl.contains("createDatabaseIfNotExist")) {
+                        enhanced.append(delimiter).append("createDatabaseIfNotExist=true");
+                    }
+                    resolvedJdbcUrl = enhanced.toString();
+                } else {
+                    resolvedJdbcUrl = rawUrl;
+                }
             } else {
                 resolvedJdbcUrl = "jdbc:mysql://" + rawUrl;
             }
         } else {
             // Build from discrete environment parameters
             String host = getFirstEnvOrDefault(env, "localhost", "DB_HOST", "MYSQL_HOST", "MYSQLHOST");
-            String portStr = getFirstEnvOrDefault(env, "3306", "DB_PORT", "MYSQL_PORT", "MYSQLPORT");
+            String portStr = getFirstEnv(env, "DB_PORT", "MYSQL_PORT", "MYSQLPORT");
             String db = getFirstEnvOrDefault(env, "ai_interview_prep", "DB_NAME", "MYSQL_DATABASE", "MYSQLDATABASE");
             String sslMode = getFirstEnvOrDefault(env, "PREFERRED", "DB_SSL_MODE", "MYSQL_SSL_MODE");
 
-            int port = 3306;
-            try {
-                port = Integer.parseInt(portStr.trim());
-            } catch (NumberFormatException e) {
-                logger.warn("Invalid DB_PORT '{}', falling back to 3306", portStr);
-            }
+            int port = resolvePort(env, host, portStr);
 
-            resolvedJdbcUrl = String.format("jdbc:mysql://%s:%d/%s?sslMode=%s&allowPublicKeyRetrieval=true&serverTimezone=UTC",
+            resolvedJdbcUrl = String.format("jdbc:mysql://%s:%d/%s?sslMode=%s&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true",
                     host, port, db, sslMode);
 
-            if (username == null) username = "root";
-            if (password == null) password = "root";
+            logger.info("Configured MySQL DataSource from parameters targeting host: [{}:{}] and database: [{}]", host, port, db);
+        }
 
-            boolean isCloud = isCloudEnvironment(env);
-            if (("localhost".equalsIgnoreCase(host) || "127.0.0.1".equals(host)) && isCloud) {
-                logger.warn("\n" +
-                        "********************************************************************************\n" +
-                        "⚠️  DATABASE CONFIGURATION WARNING FOR CLOUD DEPLOYMENT:\n" +
-                        "The application is configured to connect to MySQL on 'localhost:{}', but this service\n" +
-                        "is running in a cloud container (Render) where no local MySQL daemon is present.\n" +
-                        "\n" +
-                        "To connect to your database, set the following environment variables in Render:\n" +
-                        "  - DB_HOST (e.g., your MySQL host from Aiven, Railway, AWS RDS, PlanetScale, etc.)\n" +
-                        "  - DB_PORT (e.g., 3306)\n" +
-                        "  - DB_NAME (e.g., ai_interview_prep)\n" +
-                        "  - DB_USER (your database user)\n" +
-                        "  - DB_PASSWORD (your database password)\n" +
-                        "Or supply a single connection URL:\n" +
-                        "  - DATABASE_URL or DB_URL (e.g., mysql://user:pass@host:3306/dbname)\n" +
-                        "********************************************************************************", port);
-            } else {
-                logger.info("Configured MySQL DataSource from parameters targeting host: [{}:{}] and database: [{}]", host, port, db);
-            }
+        if (username == null || username.isBlank()) username = "root";
+        if (password == null) password = "root";
+
+        boolean isLocalhost = resolvedJdbcUrl.contains("//localhost") || resolvedJdbcUrl.contains("//127.0.0.1");
+        if (isLocalhost && isCloudEnvironment(env)) {
+            logger.warn("\n" +
+                    "********************************************************************************\n" +
+                    "⚠️  DATABASE CONFIGURATION WARNING FOR CLOUD DEPLOYMENT:\n" +
+                    "The application is configured to connect to MySQL on localhost: [{}]\n" +
+                    "but this service is running in a cloud container (Render) where no local MySQL daemon is present.\n" +
+                    "\n" +
+                    "To connect to your database, set the following environment variables in Render:\n" +
+                    "  - DB_HOST (e.g., your MySQL host from Aiven, Railway, AWS RDS, PlanetScale, etc.)\n" +
+                    "  - DB_PORT (e.g., 3306)\n" +
+                    "  - DB_NAME (e.g., ai_interview_prep)\n" +
+                    "  - DB_USER (your database user)\n" +
+                    "  - DB_PASSWORD (your database password)\n" +
+                    "Or supply a single connection URL:\n" +
+                    "  - DATABASE_URL (e.g., mysql://user:pass@host:3306/dbname)\n" +
+                    "********************************************************************************", resolvedJdbcUrl);
         }
 
         return new ResolvedDataSourceParams(resolvedJdbcUrl, username, password);
@@ -208,5 +224,42 @@ public class DataSourceConfig {
     private static String getFirstEnvOrDefault(Environment env, String defaultVal, String... keys) {
         String val = getFirstEnv(env, keys);
         return (val != null && !val.trim().isEmpty()) ? val.trim() : defaultVal;
+    }
+
+    private static int resolvePort(Environment env, String host, String portStr) {
+        if (portStr != null && !portStr.isBlank()) {
+            try {
+                return Integer.parseInt(portStr.trim());
+            } catch (NumberFormatException e) {
+                logger.warn("Invalid DB_PORT '{}', falling back", portStr);
+            }
+        }
+
+        if (isCloudEnvironment(env)) {
+            return 3306;
+        }
+
+        if ("localhost".equalsIgnoreCase(host) || "127.0.0.1".equals(host)) {
+            if (isPortListening("127.0.0.1", 3307)) {
+                logger.info("Auto-detected local MySQL database active on port 3307");
+                return 3307;
+            }
+            if (isPortListening("127.0.0.1", 3306)) {
+                logger.info("Auto-detected local MySQL database active on port 3306");
+                return 3306;
+            }
+            return 3307;
+        }
+
+        return 3306;
+    }
+
+    private static boolean isPortListening(String host, int port) {
+        try (java.net.Socket s = new java.net.Socket()) {
+            s.connect(new java.net.InetSocketAddress(host, port), 200);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

@@ -33,7 +33,10 @@ class DataSourceConfigTest {
 
         DataSourceConfig.ResolvedDataSourceParams params = DataSourceConfig.resolveParameters(env);
         assertNotNull(params);
-        assertEquals("jdbc:mysql://mysql.custom-host.com:3306/custom_interview_db?sslMode=REQUIRED&allowPublicKeyRetrieval=true&serverTimezone=UTC", params.getJdbcUrl());
+        assertTrue(params.getJdbcUrl().startsWith("jdbc:mysql://mysql.custom-host.com:3306/custom_interview_db"));
+        assertTrue(params.getJdbcUrl().contains("sslMode=REQUIRED"));
+        assertTrue(params.getJdbcUrl().contains("allowPublicKeyRetrieval=true"));
+        assertTrue(params.getJdbcUrl().contains("createDatabaseIfNotExist=true"));
         assertEquals("db_admin", params.getUsername());
         assertEquals("db_password_456", params.getPassword());
     }
@@ -60,8 +63,27 @@ class DataSourceConfigTest {
 
         DataSourceConfig.ResolvedDataSourceParams params = DataSourceConfig.resolveParameters(env);
         assertNotNull(params);
-        assertEquals("jdbc:mysql://localhost:3306/ai_interview_prep?sslMode=PREFERRED&allowPublicKeyRetrieval=true&serverTimezone=UTC", params.getJdbcUrl());
+        assertTrue(params.getJdbcUrl().startsWith("jdbc:mysql://localhost:"));
+        assertTrue(params.getJdbcUrl().contains("/ai_interview_prep?sslMode=PREFERRED"));
+        assertTrue(params.getJdbcUrl().contains("allowPublicKeyRetrieval=true"));
+        assertTrue(params.getJdbcUrl().contains("createDatabaseIfNotExist=true"));
         assertEquals("root", params.getUsername());
         assertEquals("root", params.getPassword());
+    }
+
+    @Test
+    void testResolveParametersJdbcEnhancement() {
+        MockEnvironment env = new MockEnvironment();
+        env.setProperty("SPRING_DATASOURCE_URL", "jdbc:mysql://remote-db.com:3306/interview_db");
+        env.setProperty("SPRING_DATASOURCE_USERNAME", "dbuser");
+        env.setProperty("SPRING_DATASOURCE_PASSWORD", "dbpass");
+
+        DataSourceConfig.ResolvedDataSourceParams params = DataSourceConfig.resolveParameters(env);
+        assertNotNull(params);
+        assertTrue(params.getJdbcUrl().contains("allowPublicKeyRetrieval=true"));
+        assertTrue(params.getJdbcUrl().contains("sslMode=PREFERRED"));
+        assertTrue(params.getJdbcUrl().contains("serverTimezone=UTC"));
+        assertEquals("dbuser", params.getUsername());
+        assertEquals("dbpass", params.getPassword());
     }
 }
