@@ -63,38 +63,73 @@ export const AboutPage: React.FC = () => {
           <Users className="w-6 h-6 text-indigo-400" />
           <span>Project Team • Coffee and Code</span>
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div className="p-6 rounded-2xl bg-slate-900/50 border border-slate-800 space-y-3">
-            <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold">
-              SG
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Member 1: Shailesh Kumar */}
+          <div className="p-6 rounded-2xl bg-slate-900/50 border border-slate-800 hover:border-indigo-500/40 hover:bg-slate-900/80 transition-all duration-200 space-y-4 flex flex-col justify-between group">
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500/20 to-indigo-600/10 border border-indigo-500/30 flex items-center justify-center text-indigo-300 font-bold text-base shadow-sm group-hover:border-indigo-400/50 transition-colors">
+                SK
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white tracking-tight group-hover:text-indigo-200 transition-colors">Shailesh Kumar</h3>
+                <p className="text-xs text-indigo-400 font-mono mt-0.5">Roll: 11242564</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-base font-bold text-white">Shubhamji Gupta</h3>
-              <p className="text-xs text-slate-400 font-mono">Roll: 11242572</p>
+            <div className="pt-3 border-t border-slate-800/80 space-y-1">
+              <p className="text-xs font-medium text-slate-300">B.Tech Computer Science &amp; Engineering</p>
+              <p className="text-[11px] text-slate-400">MMEC, MMDU-Mullana.</p>
             </div>
-            <p className="text-xs text-slate-400">B.Tech Computer Science & Engineering, MMEC, MMDU-Mullana.</p>
           </div>
 
-          <div className="p-6 rounded-2xl bg-slate-900/50 border border-slate-800 space-y-3">
-            <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold">
-              PK
+          {/* Member 2: Harshit Kumar */}
+          <div className="p-6 rounded-2xl bg-slate-900/50 border border-slate-800 hover:border-indigo-500/40 hover:bg-slate-900/80 transition-all duration-200 space-y-4 flex flex-col justify-between group">
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500/20 to-indigo-600/10 border border-indigo-500/30 flex items-center justify-center text-indigo-300 font-bold text-base shadow-sm group-hover:border-indigo-400/50 transition-colors">
+                HK
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white tracking-tight group-hover:text-indigo-200 transition-colors">Harshit Kumar</h3>
+                <p className="text-xs text-indigo-400 font-mono mt-0.5">Roll: 11242664</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-base font-bold text-white">Pawan Kumar</h3>
-              <p className="text-xs text-slate-400 font-mono">Roll: 11242658</p>
+            <div className="pt-3 border-t border-slate-800/80 space-y-1">
+              <p className="text-xs font-medium text-slate-300">B.Tech Computer Science &amp; Engineering</p>
+              <p className="text-[11px] text-slate-400">MMEC, MMDU-Mullana.</p>
             </div>
-            <p className="text-xs text-slate-400">B.Tech Computer Science & Engineering, MMEC, MMDU-Mullana.</p>
           </div>
 
-          <div className="p-6 rounded-2xl bg-slate-900/50 border border-slate-800 space-y-3 border-indigo-500/30 bg-indigo-950/10">
-            <div className="w-12 h-12 rounded-xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-300 font-bold">
-              AS
+          {/* Member 3: Sarfaraz Khan */}
+          <div className="p-6 rounded-2xl bg-slate-900/50 border border-slate-800 hover:border-indigo-500/40 hover:bg-slate-900/80 transition-all duration-200 space-y-4 flex flex-col justify-between group">
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500/20 to-indigo-600/10 border border-indigo-500/30 flex items-center justify-center text-indigo-300 font-bold text-base shadow-sm group-hover:border-indigo-400/50 transition-colors">
+                SK
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white tracking-tight group-hover:text-indigo-200 transition-colors">Sarfaraz Khan</h3>
+                <p className="text-xs text-indigo-400 font-mono mt-0.5">Roll: 11242645</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-base font-bold text-white">Ashish Kumar Sharma</h3>
-              <p className="text-xs text-indigo-300 font-mono">Roll: 11242644</p>
+            <div className="pt-3 border-t border-slate-800/80 space-y-1">
+              <p className="text-xs font-medium text-slate-300">B.Tech Computer Science &amp; Engineering</p>
+              <p className="text-[11px] text-slate-400">MMEC, MMDU-Mullana.</p>
             </div>
-            <p className="text-xs text-slate-400">B.Tech Computer Science & Engineering, MMEC, MMDU-Mullana.</p>
+          </div>
+
+          {/* Member 4: Priyanshu Kumar */}
+          <div className="p-6 rounded-2xl bg-slate-900/50 border border-slate-800 hover:border-indigo-500/40 hover:bg-slate-900/80 transition-all duration-200 space-y-4 flex flex-col justify-between group">
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500/20 to-indigo-600/10 border border-indigo-500/30 flex items-center justify-center text-indigo-300 font-bold text-base shadow-sm group-hover:border-indigo-400/50 transition-colors">
+                PK
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white tracking-tight group-hover:text-indigo-200 transition-colors">Priyanshu Kumar</h3>
+                <p className="text-xs text-indigo-400 font-mono mt-0.5">Roll: 11242565</p>
+              </div>
+            </div>
+            <div className="pt-3 border-t border-slate-800/80 space-y-1">
+              <p className="text-xs font-medium text-slate-300">B.Tech Computer Science &amp; Engineering</p>
+              <p className="text-[11px] text-slate-400">MMEC, MMDU-Mullana.</p>
+            </div>
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 # 🎯 AI Interview Prep
 
 > **An AI-powered interview preparation platform for college students and job seekers.**  
-> Built as a production-grade, full-stack web application based on the B.Tech project synopsis by **Team "Coffee and Code"** (*Shubhamji Gupta, Pawan Kumar, Ashish Kumar Sharma* at Maharishi Markandeshwar Deemed to be University).
+> Developed and engineered by **Team "Coffee and Code"** (*Shailesh Kumar, Harshit Kumar, Sarfaraz Khan, Priyanshu Kumar* at Maharishi Markandeshwar Deemed to be University).
 
 ---
 
