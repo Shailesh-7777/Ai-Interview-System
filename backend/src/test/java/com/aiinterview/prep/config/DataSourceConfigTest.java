@@ -19,6 +19,10 @@ class DataSourceConfigTest {
         assertTrue(params.getJdbcUrl().contains("allowPublicKeyRetrieval=true"));
         assertEquals("avnadmin", params.getUsername());
         assertEquals("SecretPass123", params.getPassword());
+        assertEquals("mysql-aiven.aivencloud.com", params.getHost());
+        assertEquals(23456, params.getPort());
+        assertEquals("defaultdb", params.getDatabaseName());
+        assertEquals("REQUIRED", params.getSslMode());
     }
 
     @Test
@@ -39,6 +43,48 @@ class DataSourceConfigTest {
         assertTrue(params.getJdbcUrl().contains("createDatabaseIfNotExist=true"));
         assertEquals("db_admin", params.getUsername());
         assertEquals("db_password_456", params.getPassword());
+        assertEquals("mysql.custom-host.com", params.getHost());
+        assertEquals(3306, params.getPort());
+        assertEquals("custom_interview_db", params.getDatabaseName());
+        assertEquals("REQUIRED", params.getSslMode());
+    }
+
+    @Test
+    void testResolveParametersAivenDiscreteWithUsername() {
+        MockEnvironment env = new MockEnvironment();
+        env.setProperty("DB_HOST", "mysql-2048437f-kumsailesh784-0111.aivencloud.com");
+        env.setProperty("DB_PORT", "23456");
+        env.setProperty("DB_NAME", "defaultdb");
+        env.setProperty("DB_USERNAME", "avnadmin");
+        env.setProperty("DB_PASSWORD", "SuperSecureAivenPass");
+        env.setProperty("DB_SSL_MODE", "REQUIRED");
+
+        DataSourceConfig.ResolvedDataSourceParams params = DataSourceConfig.resolveParameters(env);
+        assertNotNull(params);
+        assertTrue(params.getJdbcUrl().startsWith("jdbc:mysql://mysql-2048437f-kumsailesh784-0111.aivencloud.com:23456/defaultdb"));
+        assertTrue(params.getJdbcUrl().contains("sslMode=REQUIRED"));
+        assertTrue(params.getJdbcUrl().contains("allowPublicKeyRetrieval=true"));
+        assertEquals("avnadmin", params.getUsername());
+        assertEquals("SuperSecureAivenPass", params.getPassword());
+        assertEquals("mysql-2048437f-kumsailesh784-0111.aivencloud.com", params.getHost());
+        assertEquals(23456, params.getPort());
+        assertEquals("defaultdb", params.getDatabaseName());
+        assertEquals("REQUIRED", params.getSslMode());
+    }
+
+    @Test
+    void testRemoteHostDefaultsToSslRequired() {
+        MockEnvironment env = new MockEnvironment();
+        env.setProperty("DB_HOST", "remote-mysql-server.net");
+        env.setProperty("DB_PORT", "3306");
+        env.setProperty("DB_NAME", "cloud_db");
+        env.setProperty("DB_USERNAME", "cloud_user");
+        env.setProperty("DB_PASSWORD", "cloud_pass");
+
+        DataSourceConfig.ResolvedDataSourceParams params = DataSourceConfig.resolveParameters(env);
+        assertNotNull(params);
+        assertEquals("REQUIRED", params.getSslMode());
+        assertTrue(params.getJdbcUrl().contains("sslMode=REQUIRED"));
     }
 
     @Test
@@ -81,9 +127,22 @@ class DataSourceConfigTest {
         DataSourceConfig.ResolvedDataSourceParams params = DataSourceConfig.resolveParameters(env);
         assertNotNull(params);
         assertTrue(params.getJdbcUrl().contains("allowPublicKeyRetrieval=true"));
-        assertTrue(params.getJdbcUrl().contains("sslMode=PREFERRED"));
+        assertTrue(params.getJdbcUrl().contains("sslMode=REQUIRED")); // remote host defaults to REQUIRED
         assertTrue(params.getJdbcUrl().contains("serverTimezone=UTC"));
         assertEquals("dbuser", params.getUsername());
         assertEquals("dbpass", params.getPassword());
+    }
+
+    @Test
+    void testMaskUrl() {
+        String urlWithCreds = "mysql://avnadmin:SecretPass123@mysql-aiven.aivencloud.com:23456/defaultdb";
+        String masked = DataSourceConfig.maskUrl(urlWithCreds);
+        assertFalse(masked.contains("SecretPass123"));
+        assertTrue(masked.contains("avnadmin:****@"));
+
+        String jdbcUrlWithPasswordParam = "jdbc:mysql://host:3306/db?password=SecretPass123&user=admin";
+        String maskedJdbc = DataSourceConfig.maskUrl(jdbcUrlWithPasswordParam);
+        assertFalse(maskedJdbc.contains("SecretPass123"));
+        assertTrue(maskedJdbc.contains("password=****"));
     }
 }
