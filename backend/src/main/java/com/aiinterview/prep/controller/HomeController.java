@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.util.Map;
 
 @RestController
@@ -29,16 +30,22 @@ public class HomeController {
     @GetMapping("/api/health")
     public ResponseEntity<Map<String, Object>> health() {
         boolean dbConnected = false;
+        String engine = "DISCONNECTED";
         if (dataSource != null) {
             try (Connection conn = dataSource.getConnection()) {
                 dbConnected = conn.isValid(2);
+                if (dbConnected) {
+                    DatabaseMetaData meta = conn.getMetaData();
+                    engine = meta.getDatabaseProductName() + " (v" + meta.getDatabaseProductVersion() + ")";
+                }
             } catch (Exception ignored) {
                 dbConnected = false;
             }
         }
         return ResponseEntity.ok(Map.of(
                 "status", dbConnected ? "UP" : "DEGRADED",
-                "database", dbConnected ? "CONNECTED" : "DISCONNECTED"
+                "database", dbConnected ? "CONNECTED" : "DISCONNECTED",
+                "databaseEngine", engine
         ));
     }
 }

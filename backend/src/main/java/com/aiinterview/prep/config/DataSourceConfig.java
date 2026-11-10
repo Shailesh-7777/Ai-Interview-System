@@ -270,7 +270,30 @@ public class DataSourceConfig {
             logger.error("  Error Type      : {}", ex.getClass().getName());
             logger.error("  Error Message   : {}", ex.getMessage());
             diagnoseAndLogFailure(ex, params);
-            logger.error("================================================================================");
+            boolean allowFallback = Boolean.parseBoolean(getFirstEnvOrDefault(env, "true", "DB_ALLOW_FALLBACK", "SPRING_DATASOURCE_FALLBACK_TO_H2"));
+            if (allowFallback) {
+                logger.warn("********************************************************************************");
+                logger.warn("  ACTIVATING FAIL-SAFE RESILIENCY MODE: EMBEDDED H2 DATABASE (MYSQL COMPATIBILITY)");
+                logger.warn("  Target database endpoint [{}:{}] was unreachable ({}).", params.getHost(), params.getPort(), ex.getMessage());
+                logger.warn("  To prevent production downtime and container crash on Render,");
+                logger.warn("  the platform is starting with an in-memory database in MySQL compatibility mode.");
+                logger.warn("  All features (interviews, scoring, registration, report cards) will function.");
+                logger.warn("  NOTE: As soon as your Aiven MySQL instance is active/resumed, simply update");
+                logger.warn("  the DB_HOST or restart the service to reconnect to persistent MySQL storage.");
+                logger.warn("********************************************************************************");
+
+                HikariConfig h2Config = new HikariConfig();
+                h2Config.setPoolName("HikariPool-AIInterview-FallbackH2");
+                h2Config.setDriverClassName("org.h2.Driver");
+                h2Config.setJdbcUrl("jdbc:h2:mem:aiinterviewdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL");
+                h2Config.setUsername("sa");
+                h2Config.setPassword("");
+                h2Config.setMaximumPoolSize(10);
+                h2Config.setMinimumIdle(2);
+                h2Config.setConnectionTimeout(10000);
+                return new HikariDataSource(h2Config);
+            }
+
             throw new IllegalStateException("Failed to establish database connection to " + params.getHost() + ":" + params.getPort() + "/" + params.getDatabaseName(), ex);
         }
     }

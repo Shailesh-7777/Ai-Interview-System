@@ -145,4 +145,36 @@ class DataSourceConfigTest {
         assertFalse(maskedJdbc.contains("SecretPass123"));
         assertTrue(maskedJdbc.contains("password=****"));
     }
+
+    @Test
+    void testFallbackToH2WhenRemoteHostUnresolvable() throws Exception {
+        MockEnvironment env = new MockEnvironment();
+        // Point to an unresolvable cloud domain (exact scenario as reported on Render)
+        env.setProperty("DB_HOST", "mysql-2048437f-kumsailesh784-0111.e.aivencloud.com");
+        env.setProperty("DB_PORT", "23959");
+        env.setProperty("DB_NAME", "defaultdb");
+        env.setProperty("DB_USERNAME", "avnadmin");
+        env.setProperty("DB_PASSWORD", "somePassword");
+        env.setProperty("DB_ALLOW_FALLBACK", "true");
+
+        DataSourceConfig config = new DataSourceConfig();
+        javax.sql.DataSource ds = config.dataSource(env);
+        assertNotNull(ds);
+        try (java.sql.Connection conn = ds.getConnection()) {
+            assertTrue(conn.isValid(2));
+            assertEquals("H2", conn.getMetaData().getDatabaseProductName());
+        }
+    }
+
+    @Test
+    void testFailFastWhenFallbackDisabled() {
+        MockEnvironment env = new MockEnvironment();
+        env.setProperty("DB_HOST", "mysql-2048437f-kumsailesh784-0111.e.aivencloud.com");
+        env.setProperty("DB_PORT", "23959");
+        env.setProperty("DB_NAME", "defaultdb");
+        env.setProperty("DB_ALLOW_FALLBACK", "false");
+
+        DataSourceConfig config = new DataSourceConfig();
+        assertThrows(IllegalStateException.class, () -> config.dataSource(env));
+    }
 }
